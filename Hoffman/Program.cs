@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace Hoffman
             this.next = next;
         }
         //public Node* prev;
+        public bool isMerged = false;
+        public bool isSummed = false;
         public double prob;
         public int code;
         public Node next;
@@ -48,6 +51,7 @@ namespace Hoffman
                 secondIter = iteration(secondIter);
                 tree.Add(secondIter);
             } while (secondIter.Count > 1);
+            
 
             print();
             getWords();
@@ -56,14 +60,20 @@ namespace Hoffman
 
         private static void print()
         {
-            foreach (List<Node> list in tree)
+            for (int i = 0, j = 0; j < tree[0].Count; j++)
             {
-                foreach(Node node in list)
+                while (i < tree.Count && j < tree[i].Count)
                 {
-                    Console.Write(node.prob + " ");
+                    if (tree[i][j].isSummed == true && tree[i][j].isMerged == true) Console.Write($"->{tree[i][j].prob}-\t");
+                    else if (tree[i][j].isSummed == true) Console.Write($"{tree[i][j].prob}-\t");
+                    else if (tree[i][j].isMerged == true) Console.Write($"->{tree[i][j].prob}\t");
+                    else Console.Write($"{tree[i][j].prob}\t");
+                    i++;
                 }
                 Console.WriteLine();
+                i = 0;
             }
+            Console.WriteLine();
         }
 
         private static List<Node> iteration(List<Node> nodes)
@@ -85,12 +95,14 @@ namespace Hoffman
             foreach (Node curNode in currentNodes)
                 sumOfNodes += curNode.prob;
             Node newNode = new Node(sumOfNodes, -1, null);
+            newNode.isMerged = true;
 
             int count = 0;
             for (int i = nodes.Count - countProbs; i < nodes.Count; i++)
             {
                 nodes[i].next = newNode;
                 nodes[i].code = count++;
+                nodes[i].isSummed = true;
             }
 
             newListOfNodes.Add(newNode);
@@ -101,7 +113,10 @@ namespace Hoffman
 
         private static void firstIteration(ref List<Node> previous, ref List<Node> newList)
         {
-            int countProbs = ((N - 1) % (M - 1)) + 1;
+            int countProbs = ((N - 1) % (M - 1));
+            if (countProbs == 0) countProbs = M;
+            else countProbs++;
+
             if (countProbs == 1) countProbs++;
             
             for (int i = 0; i < previous.Count - countProbs; i++)
@@ -121,12 +136,14 @@ namespace Hoffman
                 sumOfNodes += curNode.prob;
             }
             Node newNode = new Node(sumOfNodes, -1, null);
+            newNode.isMerged = true;
 
             int count = 0;
             for (int i = previous.Count - countProbs; i < previous.Count; i++)
             {
                 previous[i].next = newNode;
                 previous[i].code = count++;
+                previous[i].isSummed = true;
             }
 
             newList.Add(newNode);
